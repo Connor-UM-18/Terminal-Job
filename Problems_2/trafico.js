@@ -21,8 +21,8 @@ function crearCalle(tamano, tipoInicio, tipoFinal, x, y, angulo, probabilidadGen
         tipoFinal: tipoFinal,
         probabilidadGeneracion: probabilidadGeneracion,
         arreglo: new Array(tamano).fill(0),
-        x: x*celda_tamano,             // Coordenada x de inicio
-        y: y*celda_tamano,             // Coordenada y de inicio
+        x: x * celda_tamano,             // Coordenada x de inicio
+        y: y * celda_tamano,             // Coordenada y de inicio
         angulo: angulo    // Ángulo de rotación
     };
 
@@ -67,7 +67,7 @@ function actualizarCalle(calle) {
 
 // Renderiza las calles en coordenadas específicas y ángulo
 function renderizarCalles() {
-    const contenedor = document.getElementById("simulador");
+    const contenedor = document.getElementById("contenido-simulador"); // <-- Cambiado a "contenido-simulador"
     contenedor.innerHTML = ""; // Limpia el contenedor
 
     calles.forEach((calle) => {
@@ -141,22 +141,63 @@ function iniciarSimulacion() {
     }, 100);
 }
 
-// --- Zoom ---
-const simulador = document.getElementById('simulador');
+// --- Zoom con la rueda del ratón ---
+const contenedorSimulador = document.getElementById('contenido-simulador');
+const simuladorDiv = document.getElementById('simulador');
+let escalaActual = 0.5;
+
+simuladorDiv.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    escalaActual += event.deltaY < 0 ? 0.1 : -0.1;
+    contenedorSimulador.style.transform = `scale(${escalaActual})`;
+});
+
+// --- Desplazamiento del mapa arrastrando ---
+let isDragging = false;
+let startX, startY;
+let offsetX = 0, offsetY = 0;
+
+simuladorDiv.addEventListener('mousedown', (event) => {
+    if (event.button === 0) {
+        isDragging = true;
+        startX = event.clientX - offsetX;
+        startY = event.clientY - offsetY;
+        simuladorDiv.style.cursor = 'grabbing';
+    }
+});
+
+simuladorDiv.addEventListener('mousemove', (event) => {
+    if (isDragging) {
+        offsetX = event.clientX - startX;
+        offsetY = event.clientY - startY;
+        contenedorSimulador.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${escalaActual})`;
+    }
+});
+
+simuladorDiv.addEventListener('mouseup', () => {
+    isDragging = false;
+    simuladorDiv.style.cursor = 'default';
+});
+
+simuladorDiv.addEventListener('mouseleave', () => {
+    if (isDragging) {
+        isDragging = false;
+        simuladorDiv.style.cursor = 'default';
+    }
+});
+
+// --- Zoom con botones --- // <-- Esta sección se ha movido aquí
 const zoomInButton = document.getElementById('zoomIn');
 const zoomOutButton = document.getElementById('zoomOut');
 
-let escalaActual = 0.5; // Escala inicial
-
 zoomInButton.addEventListener('click', () => {
   escalaActual += 0.1;
-  simulador.style.transform = `scale(${escalaActual})`;
+  contenedorSimulador.style.transform = `scale(${escalaActual})`;
 });
 
 zoomOutButton.addEventListener('click', () => {
   escalaActual -= 0.1;
-  simulador.style.transform = `scale(${escalaActual})`;
+  contenedorSimulador.style.transform = `scale(${escalaActual})`;
 });
-// --- ---
 
 iniciarSimulacion();

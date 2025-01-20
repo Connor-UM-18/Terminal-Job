@@ -1,0 +1,40 @@
+/* estilos.css */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    overflow: auto;
+    background-color: #f0f0f000;
+    display: flex;               /* Flexbox para alinear elementos */
+    flex-direction: column;    /* Alineación en columna */
+    min-height: 100vh;          /* Altura mínima de la ventana */
+}
+
+#simulador {
+    position: relative;
+    width: 90%;
+    height: 1000px;            /* Altura fija del simulador */
+    border: 2px solid black;
+    margin: auto;
+    overflow: auto;
+    background-color: #1d241e59;
+    transform-origin: top left; /* Ajusta el origen de la transformación */
+    transform: scale(0.5);     /* Escala inicial para mostrar la mayor parte del mapa */
+    flex-grow: 1;              /* Permite que el simulador ocupe el espacio disponible */
+}
+
+/* Estilos para los botones */
+#botones-zoom, #botones-accion {
+    margin-bottom: 10px;
+}
+
+.cuadro {
+    background-color: rgb(205, 205, 205);
+}
+
+.cuadro.carro {
+    background-image: url('carro.png');
+    background-size: contain; /* Asegura que la imagen se ajuste dentro del cuadro */
+    background-repeat: no-repeat; /* Evita que la imagen se repita */
+    background-position: center; /* Centra la imagen dentro del cuadro */
+}

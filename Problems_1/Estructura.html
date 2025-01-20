@@ -4,40 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Calles Dinámicas</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            overflow: auto;
-            background-color: #f0f0f000;
-        }
-        #simulador {
-            position: relative;
-            width: 50%;
-            height: 1900px;
-            border: 2px solid black;
-            margin: auto;
-            overflow: auto; 
-            background-color: #1d241e59;
-        }
-
-        .cuadro {
-            background-color: rgb(205, 205, 205);
-        }
-
-        .cuadro.carro {
-            background-image: url('carro.png');
-            background-size: contain; /* Asegura que la imagen se ajuste dentro del cuadro */
-            background-repeat: no-repeat; /* Evita que la imagen se repita */
-            background-position: center; /* Centra la imagen dentro del cuadro */
-        }
-    </style>
+    <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
     <h1>Simulador de Tráfico con Calles Dinámicas</h1>
-    <!--<button onclick="iniciarSimulacion()">Iniciar Simulación</button>-->
+    <hr>
+
+    <div id="botones-zoom">
+        <button id="zoomIn">+</button>
+        <button id="zoomOut">-</button>
+    </div>
+    <hr>
+
     <div id="simulador"></div>
+    
+    <hr>
+
+    <div id="botones-accion">
+        <button onclick="">Hold</button>
+        <button onclick="">Precio</button>
+    </div>
+
     <script src="trafico.js"></script>
 </body>
 </html>
