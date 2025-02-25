@@ -1,12 +1,12 @@
 const reglas = {
-    "0,0,0": 0,
-    "0,0,1": 0,
-    "0,1,0": 0,
-    "0,1,1": 1, // mismo
-    "1,0,0": 1, // anterior
-    "1,0,1": 1, // anterior
-    "1,1,0": 0,
-    "1,1,1": 1  // mismo
+    "0,0,0": 0,  // Si no hay vehículos, la celda permanece vacía
+    "0,0,1": 0,  // Si solo hay un vehículo a la derecha, la celda permanece vacía
+    "0,1,0": 0,  // Si hay un vehículo en la celda actual, pero no en las adyacentes, se detiene
+    "0,1,1": 1,  // Si hay vehículos en la celda actual y derecha, el vehículo avanza
+    "1,0,0": 1,  // Si hay un vehículo a la izquierda, se mueve a la celda actual
+    "1,0,1": 1,  // Si hay vehículos a la izquierda y derecha, el vehículo avanza
+    "1,1,0": 0,  // Si hay vehículos a la izquierda y en la celda actual, se detiene
+    "1,1,1": 1   // Si hay vehículos en las tres celdas, el vehículo avanza
 };
 
 let calles = [];       // Almacenará las calles
@@ -148,3 +148,5 @@ function iniciarSimulacion() {
 }
 
 iniciarSimulacion();
+
+
