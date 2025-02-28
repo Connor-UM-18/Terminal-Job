@@ -36,8 +36,11 @@
                   <option value="">Seleccione una calle...</option>
                 </select>
                 <!-- Modificación de probabilidadGeneracion -->
-                <label for="inputProbabilidad" class="form-label mt-3">Probabilidad de Generación:</label>
-                <input type="number" id="inputProbabilidad" class="form-control" min="0" max="1" step="0.01">
+                <label for="inputProbabilidadGeneracion" class="form-label mt-3">Probabilidad de Generación:</label>
+                <input type="number" id="inputProbabilidadGeneracion" class="form-control" min="0" max="100" step="1">
+                <!-- Modificación de probabilidadSaltoDeCarril -->
+                <label for="inputProbabilidadSalto" class="form-label mt-3">Probabilidad de Salto de Carril (%):</label>
+                <input type="number" id="inputProbabilidadSalto" class="form-control" min="0" max="100" step="1">
 
                 <button id="btnActualizarCalle" class="btn btn-primary mt-3">Actualizar</button>
               </div>

@@ -13,7 +13,8 @@ const reglas = {
 
 // Variables para el modificador de calles
 const selectCalle = document.getElementById("selectCalle");
-const inputProbabilidad = document.getElementById("inputProbabilidad");
+const inputProbabilidadGeneracion = document.getElementById("inputProbabilidadGeneracion");
+const inputProbabilidadSalto = document.getElementById("inputProbabilidadSalto");
 const btnActualizarCalle = document.getElementById("btnActualizarCalle");
 
 let animationId; // Variable para guardar el ID de la animación
@@ -96,7 +97,7 @@ function dibujarMinimapa() {
     minimapaCtx.restore();
 }
 
-// Evento para guardar la calle seleccionada
+/*Evento para guardar la calle seleccionada
 selectCalle.addEventListener("change", () => {
     const calleIndex = selectCalle.value;
     if (calleIndex !== "") {
@@ -105,10 +106,24 @@ selectCalle.addEventListener("change", () => {
         calleSeleccionada = null;
     }
     renderizarCanvas();
+});*/
+// Evento para guardar la calle seleccionada y mostrar valores en los inputs
+selectCalle.addEventListener("change", () => {
+    const calleIndex = selectCalle.value;
+    if (calleIndex !== "") {
+        calleSeleccionada = calles[calleIndex];
+
+        // Mostrar valores actuales en los inputs
+        inputProbabilidadGeneracion.value = calleSeleccionada.probabilidadGeneracion * 100; // Conversión a porcentaje
+        inputProbabilidadSalto.value = calleSeleccionada.probabilidadSaltoDeCarril * 100; // Conversión a porcentaje
+    } else {
+        calleSeleccionada = null;
+    }
+    renderizarCanvas();
 });
 
 // Función para crear una calle con posición, ángulo y tamaño
-function crearCalle(nombre, tamano, tipoInicio, tipoFinal, x, y, angulo, probabilidadGeneracion, carriles = 1) {
+function crearCalle(nombre, tamano, tipoInicio, tipoFinal, x, y, angulo, probabilidadGeneracion, carriles = 1, probabilidadSaltoDeCarril = 0.05) {
     let calle = {
         nombre:nombre,
         tamano: tamano,
@@ -119,7 +134,8 @@ function crearCalle(nombre, tamano, tipoInicio, tipoFinal, x, y, angulo, probabi
         x: x * celda_tamano,
         y: y * celda_tamano,
         angulo: angulo,
-        carriles: carriles // Añadimos el número de carriles
+        carriles: carriles, // Añadimos el número de carriles
+        probabilidadSaltoDeCarril: probabilidadSaltoDeCarril, // Agregar la probabilidad de salto de carril a la calle
     };
 
     // Creamos la matriz (arreglo 2D)
@@ -153,30 +169,54 @@ function conexion_calle_de_2(calle1, calle2) {
 function actualizarCalle(calle) {
     let nuevaCalle = [];
     for (let c = 0; c < calle.carriles; c++) {
-        nuevaCalle.push([...calle.arreglo[c]]); // Copia profunda del carril actual
+        nuevaCalle.push([...calle.arreglo[c]]); // Copia profunda
     }
 
     if (calle.tipoInicio === "generador") {
         for (let c = 0; c < calle.carriles; c++) {
             if (Math.random() < calle.probabilidadGeneracion) {
-                nuevaCalle[c][0] = 1; // Genera carros en la primera celda de cada carril
+                nuevaCalle[c][0] = 1;
             } else {
                 nuevaCalle[c][0] = 0;
             }
         }
     }
 
+    // Primera pasada: aplicar reglas de tráfico en el mismo carril
     for (let c = 0; c < calle.carriles; c++) {
         for (let i = 1; i < calle.tamano; i++) {
-            // Vecinos en el mismo carril
             let izquierda = calle.arreglo[c][i - 1];
             let actual = calle.arreglo[c][i];
             let derecha = (i < calle.tamano - 1) ? calle.arreglo[c][i + 1] : 0;
 
-            // --- Aplicar reglas (versión simplificada) ---
             let reglaKey = `${izquierda},${actual},${derecha}`;
             nuevaCalle[c][i] = reglas[reglaKey];
         }
+    }
+
+    // Segunda pasada: registrar movimientos de autos que cambiarán de carril
+    let movimientos = [];
+
+    for (let c = 0; c < calle.carriles; c++) {
+        for (let i = 1; i < calle.tamano; i++) {
+            let actual = nuevaCalle[c][i]; // Ahora usamos nuevaCalle
+
+            if (actual === 1) {
+                if (Math.random() < calle.probabilidadSaltoDeCarril) {
+                    if (c > 0 && nuevaCalle[c - 1][i] === 0) {
+                        movimientos.push({ deC: c, deI: i, aC: c - 1, aI: i });
+                    } else if (c < calle.carriles - 1 && nuevaCalle[c + 1][i] === 0) {
+                        movimientos.push({ deC: c, deI: i, aC: c + 1, aI: i });
+                    }
+                }
+            }
+        }
+    }
+
+    // Tercera pasada: aplicar los movimientos de cambio de carril
+    for (let mov of movimientos) {
+        nuevaCalle[mov.deC][mov.deI] = 0; // Vaciar posición anterior
+        nuevaCalle[mov.aC][mov.aI] = 1; // Mover auto a nueva posición
     }
 
     calle.arreglo = nuevaCalle;
@@ -263,23 +303,23 @@ function calcularViewportVisible() {
 function iniciarSimulacion() {
 
     // Calles con posiciones ajustadas
-    const Avenida_Miguel_Othon_de_Mendizabal = crearCalle("Av. Miguel Othon de Mendizabal",277, "generador", "conexion", 108, 192, 39, 0.2,3);
-    const Avenida_Miguel_Bernard = crearCalle("Av. Miguel Bernard",148, "conexion", "devorador", 324, 17, -39, 0.2,3);
-    const Avenida_Cien_Metros = crearCalle("Av. Cien Metros", 250, "generador", "devorador", 134, 115, -73, 0.2,3);
-    const Avenida_Juan_de_Dios_Batiz = crearCalle("Av. Juan de Dios Batiz", 422, "generador", "devorador", 210, 110, 0, 0.2,3);
-    const Avenida_IPN = crearCalle("Av. IPN", 305, "generador", "devorador", 489, 50, -90, 0.2,2);
-    const Avenida_Guanajuato = crearCalle("Av. Guanajuato", 150, "generador", "devorador", 192, 305, 0, 0.2,1);
-    const Avenida_Montevideo = crearCalle("Av. Montevideo", 330, "generador", "devorador", 200, 333, 0, 0.2,3);
-    const Avenida_Otavalo = crearCalle("Av. Otavalo", 210, "generador", "devorador", 342, 292, 0, 0.2,1);
-    const Avenida_17_de_mayo = crearCalle("Av. 17 de mayo", 92, "generador", "devorador", 313, 353, 90, 0.2,1);
-    const Calle_Luis_Enrique_Erro_1 = crearCalle("Calle Luis Enrique Erro 1", 220, "generador", "conexion", 342, 306, 90, 0.2,2);
-    const Calle_Luis_Enrique_Erro_2 = crearCalle("Calle Luis Enrique Erro 2", 41, "conexion", "devorador", 342, 86, 55, 0.2,2);
-    const Calle_Miguel_Anda_y_Barredo = crearCalle("Calle Miguel Anda y Barredo", 153, "generador", "devorador", 415, 264, 90, 0.2,1);
-    const Avenida_Wilfrido_Massieu_1 = crearCalle("Av. Wilfrido Massieu 1", 152, "generador", "conexion", 488, 265, 180, 0.2,2);
-    const Avenida_Wilfrido_Massieu_2 = crearCalle("Av. Wilfrido Massieu 2", 164, "conexion", "devorador", 336, 265, 173, 0.2,2);
-    const Avenida_Sierravista = crearCalle("Av. Sierravista", 61, "generador", "devorador", 541, 185, 150, 0.2,1);
-    const Avenida_Lindavista = crearCalle("Av. Lindavista", 60, "generador", "devorador", 541, 230, 152, 0.2,1);
-    const Avenida_Buenavista = crearCalle("Av. Buenavista", 60, "generador", "devorador", 540, 293, 152, 0.2,1);
+    const Avenida_Miguel_Othon_de_Mendizabal = crearCalle("Av. Miguel Othon de Mendizabal",277, "generador", "conexion", 108, 192, 39, 0.2,3,0.02);
+    const Avenida_Miguel_Bernard = crearCalle("Av. Miguel Bernard",148, "conexion", "devorador", 324, 17, -39, 0.2,3,0.01);
+    const Avenida_Cien_Metros = crearCalle("Av. Cien Metros", 250, "generador", "devorador", 134, 115, -73, 0.2,3,0.01);
+    const Avenida_Juan_de_Dios_Batiz = crearCalle("Av. Juan de Dios Batiz", 422, "generador", "devorador", 210, 110, 0, 0.2,3,0.01);
+    const Avenida_IPN = crearCalle("Av. IPN", 305, "generador", "devorador", 489, 50, -90, 0.2,2,0.01);
+    const Avenida_Guanajuato = crearCalle("Av. Guanajuato", 150, "generador", "devorador", 192, 305, 0, 0.2,1,0.01);
+    const Avenida_Montevideo = crearCalle("Av. Montevideo", 330, "generador", "devorador", 200, 333, 0, 0.2,3,0.01);
+    const Avenida_Otavalo = crearCalle("Av. Otavalo", 210, "generador", "devorador", 342, 292, 0, 0.2,1,0.01);
+    const Avenida_17_de_mayo = crearCalle("Av. 17 de mayo", 92, "generador", "devorador", 313, 353, 90, 0.2,1,0.01);
+    const Calle_Luis_Enrique_Erro_1 = crearCalle("Calle Luis Enrique Erro 1", 220, "generador", "conexion", 342, 306, 90, 0.2,2,0.01);
+    const Calle_Luis_Enrique_Erro_2 = crearCalle("Calle Luis Enrique Erro 2", 41, "conexion", "devorador", 342, 86, 55, 0.2,2,0.01);
+    const Calle_Miguel_Anda_y_Barredo = crearCalle("Calle Miguel Anda y Barredo", 153, "generador", "devorador", 415, 264, 90, 0.2,1,0.01);
+    const Avenida_Wilfrido_Massieu_1 = crearCalle("Av. Wilfrido Massieu 1", 152, "generador", "conexion", 488, 265, 180, 0.2,2,0.01);
+    const Avenida_Wilfrido_Massieu_2 = crearCalle("Av. Wilfrido Massieu 2", 164, "conexion", "devorador", 336, 265, 173, 0.2,2,0.01);
+    const Avenida_Sierravista = crearCalle("Av. Sierravista", 61, "generador", "devorador", 541, 185, 150, 0.2,1,0.01);
+    const Avenida_Lindavista = crearCalle("Av. Lindavista", 60, "generador", "devorador", 541, 230, 152, 0.2,1,0.01);
+    const Avenida_Buenavista = crearCalle("Av. Buenavista", 60, "generador", "devorador", 540, 293, 152, 0.2,1,0.01);
     
     
     // Conectar calles
@@ -298,10 +338,12 @@ function iniciarSimulacion() {
     // Evento para actualizar la probabilidad al hacer clic en el botón
     btnActualizarCalle.addEventListener("click", () => {
         const calleIndex = selectCalle.value;
-        const nuevaProbabilidad = parseFloat(inputProbabilidad.value);
+        const nuevaProbabilidad = parseFloat(inputProbabilidadGeneracion.value/100);
+        const nuevaProbabilidadSalto = parseFloat(inputProbabilidadSalto.value/100);
 
-        if (calleIndex !== "" && !isNaN(nuevaProbabilidad)) {
+        if (calleIndex !== "" && (!isNaN(nuevaProbabilidad)||!isNaN(nuevaProbabilidadSalto)) ) {
             calles[calleIndex].probabilidadGeneracion = nuevaProbabilidad;
+            calles[calleIndex].probabilidadSaltoDeCarril = nuevaProbabilidadSalto;
             alert("Probabilidad actualizada");
         }
     });
